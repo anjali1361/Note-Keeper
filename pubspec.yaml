@@ -24,6 +24,7 @@ dependencies:
   flutter:
     sdk: flutter
   sqflite: any
+  provider: ^5.0.0
   path_provider: any
   intl: ^0.17.0
 

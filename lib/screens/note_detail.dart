@@ -1,22 +1,20 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:note_keeper/models/note.dart';
 import 'package:note_keeper/utils/database_helper.dart';
 import 'package:intl/intl.dart';
 
 class NoteDetail extends StatefulWidget {
-  String appBarTitle;
+  final String appBarTitle;
   final Note note;
-  NoteDetail(this. note, this.appBarTitle);
+  NoteDetail(this.note, this.appBarTitle);
 
   @override
   State<StatefulWidget> createState() {
-    return  NoteDetailState(this.note, this.appBarTitle);
+    return NoteDetailState(this.note, this.appBarTitle);
   }
 }
 
 class NoteDetailState extends State<NoteDetail> {
-
   var formKey = GlobalKey<FormState>();
 
   static var _priorities = ['High', 'Low'];
@@ -32,178 +30,165 @@ class NoteDetailState extends State<NoteDetail> {
 
   @override
   Widget build(BuildContext context) {
-    TextStyle textStyle = Theme.of(context).textTheme.title;
-
+    TextStyle textStyle = Theme.of(context).textTheme.headline6;
 
     titleController.text = note.title;
     descriptionController.text = note.description;
 
     return WillPopScope(
-
         onWillPop: () {
           // Write some code to control things, when user press Back navigation button in device navigationBar
           moveToLastScreen();
         },
-
         child: Scaffold(
           appBar: AppBar(
             title: Text(appBarTitle),
-            leading: IconButton(icon: Icon(
-                Icons.arrow_back),
+            leading: IconButton(
+                icon: Icon(Icons.arrow_back),
                 onPressed: () {
                   // Write some code to control things, when user press back button in AppBar
                   moveToLastScreen();
-                }
-            ),
+                }),
           ),
+          body: Form(
+            key: formKey,
+            child: Padding(
+              padding: EdgeInsets.only(top: 15.0, left: 10.0, right: 10.0),
+              child: ListView(
+                children: <Widget>[
+                  // First element
+                  ListTile(
+                    title: DropdownButton(
+                        items: _priorities.map((String dropDownStringItem) {
+                          return DropdownMenuItem<String>(
+                            value: dropDownStringItem,
+                            child: Text(dropDownStringItem),
+                          );
+                        }).toList(),
+                        style: textStyle,
+                        value: getPriorityAsString(note.priority),
+                        onChanged: (valueSelectedByUser) {
+                          setState(() {
+                            debugPrint('User selected $valueSelectedByUser');
+                            updatePriorityAsInt(valueSelectedByUser);
+                          });
+                        }),
+                  ),
 
-          body: Padding(
-            padding: EdgeInsets.only(top: 15.0, left: 10.0, right: 10.0),
-            child: ListView(
-              children: <Widget>[
-
-                // First element
-                ListTile(
-                  title: DropdownButton(
-                      items: _priorities.map((String dropDownStringItem) {
-                        return DropdownMenuItem<String> (
-                          value: dropDownStringItem,
-                          child: Text(dropDownStringItem),
-                        );
-                      }).toList(),
-
+                  // Second Element
+                  Padding(
+                    padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
+                    child: TextFormField(
+                      controller: titleController,
                       style: textStyle,
-
-                      value: getPriorityAsString(note.priority),
-
-                      onChanged: (valueSelectedByUser) {
-                        setState(() {
-                          debugPrint('User selected $valueSelectedByUser');
-                          updatePriorityAsInt(valueSelectedByUser);
-                        });
-                      }
-                  ),
-                ),
-
-                // Second Element
-                Padding(
-                  padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
-                  child: TextFormField(
-                    controller: titleController,
-                    style: textStyle,
-                    validator: (String value){
-                      if (value.isEmpty){
-                        moveToLastScreen();
-                        return 'Please enter note';
-                      }
-                    },
-                    onChanged: (value) {
-                      if(value.isNotEmpty){
-                        debugPrint('Something changed in Title Text Field');
-                        updateTitle();
-                      }
-                    },
-                    decoration: InputDecoration(
-                        labelText: 'Title',
-                        labelStyle: textStyle,
-                        errorStyle: TextStyle(
-                            color: Colors.yellowAccent,
-                            fontSize: 15.0
-                        ),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5.0)
-                        )
+                      validator: (String value) {
+                        if (value == null || value.isEmpty) {
+                          moveToLastScreen();
+                          return 'Please enter note';
+                        }
+                        return null;
+                      },
+                      onChanged: (value) {
+                        if (value.isNotEmpty) {
+                          debugPrint('Something changed in Title Text Field');
+                          updateTitle();
+                        }
+                      },
+                      decoration: InputDecoration(
+                          labelText: 'Title',
+                          labelStyle: textStyle,
+                          errorStyle: TextStyle(
+                              color: Colors.yellowAccent, fontSize: 15.0),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(5.0))),
                     ),
                   ),
-                ),
 
-                // Third Element
-                Padding(
-                  padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
-                  child: TextFormField(
-                    controller: descriptionController,
-                    style: textStyle,
-                    validator: (String value) {
-                      if (value.isEmpty){
-                        moveToLastScreen();
-                        return 'Please enter decsription';
-                      }
-                    },
-                    onChanged: (value) {
-                      if(value.isNotEmpty){
-                        debugPrint('Something changed in Description Text Field');
-                        updateDescription();
-                      }
-                    },
-                    decoration: InputDecoration(
-                        labelText: 'Description',
-                        labelStyle: textStyle,
-                        errorStyle: TextStyle(
-                            color: Colors.yellowAccent,
-                            fontSize: 15.0
-                        ),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5.0)
-                        )
+                  // Third Element
+                  Padding(
+                    padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
+                    child: TextFormField(
+                      // key: ,
+                      controller: descriptionController,
+                      style: textStyle,
+                      validator: (String value) {
+                        if (value == null || value.isEmpty) {
+                          moveToLastScreen();
+                          return 'Please enter decsription';
+                        }
+                        return null;
+                      },
+                      onChanged: (value) {
+                        if (value.isNotEmpty) {
+                          debugPrint(
+                              'Something changed in Description Text Field');
+                          updateDescription();
+                        }
+                      },
+                      decoration: InputDecoration(
+                          labelText: 'Description',
+                          labelStyle: textStyle,
+                          errorStyle: TextStyle(
+                              color: Colors.yellowAccent, fontSize: 15.0),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(5.0))),
                     ),
                   ),
-                ),
 
-                // Fourth Element
-                Padding(
-                  padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
-                  child: Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: RaisedButton(
-                          color: Theme.of(context).primaryColorDark,
-                          textColor: Theme.of(context).primaryColorLight,
-                          child: Text(
-                            'Save',
-                            textScaleFactor: 1.5,
+                  // Fourth Element
+                  Padding(
+                    padding: EdgeInsets.only(top: 15.0, bottom: 15.0),
+                    child: Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: RaisedButton(
+                            color: Theme.of(context).primaryColorDark,
+                            textColor: Theme.of(context).primaryColorLight,
+                            child: Text(
+                              'Save',
+                              textScaleFactor: 1.5,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                if (formKey.currentState.validate()) {
+                                  debugPrint("Save button clicked");
+                                  _save();
+                                }
+                              });
+                            },
                           ),
-                          onPressed: () {
-                            setState(() {
-                              if(formKey.currentState.validate()){
-                                debugPrint("Save button clicked");
-                                _save();
-                              }
-                            });
-                          },
                         ),
-                      ),
-
-                      Container(width: 5.0,),
-
-                      Expanded(
-                        child: RaisedButton(
-                          color: Theme.of(context).primaryColorDark,
-                          textColor: Theme.of(context).primaryColorLight,
-                          child: Text(
-                            'Delete',
-                            textScaleFactor: 1.5,
+                        Container(
+                          width: 5.0,
+                        ),
+                        Expanded(
+                          child: RaisedButton(
+                            color: Theme.of(context).primaryColorDark,
+                            textColor: Theme.of(context).primaryColorLight,
+                            child: Text(
+                              'Delete',
+                              textScaleFactor: 1.5,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                if (formKey.currentState.validate()) {
+                                  debugPrint("Delete button clicked");
+                                  _delete();
+                                }
+                              });
+                            },
                           ),
-                          onPressed: () {
-                            setState(() {
-                              if(formKey.currentState.validate()){
-                                debugPrint("Delete button clicked");
-                                _delete();
-                              }
-                            });
-                          },
                         ),
-                      ),
-
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-
-              ],
+                ],
+              ),
             ),
           ),
-
         ));
   }
+
   void moveToLastScreen() {
     Navigator.pop(context, true);
   }
@@ -225,17 +210,17 @@ class NoteDetailState extends State<NoteDetail> {
     String priority;
     switch (value) {
       case 1:
-        priority = _priorities[0];  // 'High'
+        priority = _priorities[0]; // 'High'
         break;
       case 2:
-        priority = _priorities[1];  // 'Low'
+        priority = _priorities[1]; // 'Low'
         break;
     }
     return priority;
   }
 
   // Update the title of Note object
-  void updateTitle(){
+  void updateTitle() {
     note.title = titleController.text;
   }
 
@@ -246,26 +231,28 @@ class NoteDetailState extends State<NoteDetail> {
 
   // Save data to database
   void _save() async {
-
     moveToLastScreen();
 
     note.date = DateFormat.yMMMd().format(DateTime.now());
     int result;
-    if (note.id != null) {  // Case 1: Update operation
+    if (note.id != null) {
+      // Case 1: Update operation
       result = await helper.updateNote(note);
-    } else { // Case 2: Insert Operation
+    } else {
+      // Case 2: Insert Operation
       result = await helper.insertNote(note);
     }
 
-    if (result != 0) {  // Success
+    if (result != 0) {
+      // Success
       _showAlertDialog('Status', 'Note Saved Successfully');
-    } else {  // Failure
+    } else {
+      // Failure
       _showAlertDialog('Status', 'Problem Saving Note');
     }
-
   }
-  void _delete() async {
 
+  void _delete() async {
     moveToLastScreen();
 
     // Case 1: If user is trying to delete the NEW NOTE i.e. he has come to
@@ -285,15 +272,10 @@ class NoteDetailState extends State<NoteDetail> {
   }
 
   void _showAlertDialog(String title, String message) {
-
     AlertDialog alertDialog = AlertDialog(
       title: Text(title),
       content: Text(message),
     );
-    showDialog(
-        context: context,
-        builder: (_) => alertDialog
-    );
+    showDialog(context: context, builder: (_) => alertDialog);
   }
-
 }
