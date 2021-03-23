@@ -3,6 +3,8 @@ import 'package:note_keeper/models/note.dart';
 import 'package:note_keeper/utils/database_helper.dart';
 import 'package:intl/intl.dart';
 
+import '../models/note.dart';
+
 class NoteDetail extends StatefulWidget {
   final String appBarTitle;
   final Note note;
@@ -88,12 +90,7 @@ class NoteDetailState extends State<NoteDetail> {
                         }
                         return null;
                       },
-                      onChanged: (value) {
-                        if (value.isNotEmpty) {
-                          debugPrint('Something changed in Title Text Field');
-                          updateTitle();
-                        }
-                      },
+                      onTap: () => updateTitle(),
                       decoration: InputDecoration(
                           labelText: 'Title',
                           labelStyle: textStyle,
@@ -141,9 +138,12 @@ class NoteDetailState extends State<NoteDetail> {
                     child: Row(
                       children: <Widget>[
                         Expanded(
-                          child: RaisedButton(
-                            color: Theme.of(context).primaryColorDark,
-                            textColor: Theme.of(context).primaryColorLight,
+                          child: TextButton(
+                            style: ButtonStyle(
+                                // backgroundColor:
+                                //     Theme.of(context).primaryColorLight,
+                                // textColor: Theme.of(context).primaryColorLight,
+                                ),
                             child: Text(
                               'Save',
                               textScaleFactor: 1.5,

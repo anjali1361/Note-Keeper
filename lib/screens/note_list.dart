@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:note_keeper/models/note.dart';
 import 'package:note_keeper/utils/database_helper.dart';
 import 'package:note_keeper/screens/note_detail.dart';
+import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 class NoteList extends StatefulWidget {
@@ -10,51 +11,38 @@ class NoteList extends StatefulWidget {
   State<StatefulWidget> createState() {
     return NoteListState();
   }
-
 }
 
 class NoteListState extends State<NoteList> {
-
   DatabaseHelper databaseHelper = DatabaseHelper();
   List<Note> noteList;
   var count = 0;
 
   @override
   Widget build(BuildContext context) {
-
     if (noteList == null) {
       noteList = List<Note>();
       updateListView();
     }
 
     return Scaffold(
-
       appBar: AppBar(
         title: Text('Notes'),
       ),
-
       body: getNoteListView(),
-
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           debugPrint('FAB clicked');
           navigateToDetail(Note('', '', 2), 'Add Note');
         },
-
         tooltip: 'Add Note',
-
-
         child: Icon(Icons.add),
-
       ),
     );
   }
 
   ListView getNoteListView() {
-    TextStyle titleStyle = Theme
-        .of(context)
-        .textTheme
-        .subhead;
+    TextStyle titleStyle = Theme.of(context).textTheme.headline6;
 
     return ListView.builder(
       itemCount: count,
@@ -63,38 +51,37 @@ class NoteListState extends State<NoteList> {
           color: Colors.white,
           elevation: 2.0,
           child: ListTile(
-                leading: CircleAvatar(
-              backgroundColor: getPriorityColor(
-                  this.noteList[position].priority),
+            leading: CircleAvatar(
+              backgroundColor:
+                  getPriorityColor(this.noteList[position].priority),
               child: getPriorityIcon(this.noteList[position].priority),
             ),
-
             title: Text(
               this.noteList[position].title,
               style: titleStyle,
             ),
-
-            subtitle: Text(this.noteList[position].description,style: titleStyle,),
-
+            subtitle: Text(
+              this.noteList[position].description,
+              style: titleStyle,
+            ),
             trailing: GestureDetector(
-              child: Icon(Icons.delete, color: Colors.grey,),
+              child: Icon(
+                Icons.delete,
+                color: Colors.grey,
+              ),
               onTap: () {
                 _delete(context, noteList[position]);
               },
             ),
-
-
             onTap: () {
               debugPrint("ListTile Tapped");
               navigateToDetail(this.noteList[position], 'Edit Note');
             },
-
           ),
         );
       },
     );
   }
-
 
   // Returns the priority color
   Color getPriorityColor(int priority) {
@@ -103,7 +90,7 @@ class NoteListState extends State<NoteList> {
         return Colors.red;
         break;
       case 2:
-        return Colors.yellow;
+        return Colors.orange;
         break;
 
       default:
@@ -127,7 +114,6 @@ class NoteListState extends State<NoteList> {
   }
 
   void _delete(BuildContext context, Note note) async {
-
     int result = await databaseHelper.deleteNote(note.id);
     if (result != 0) {
       _showSnackBar(context, 'Note Deleted Successfully');
@@ -136,12 +122,11 @@ class NoteListState extends State<NoteList> {
   }
 
   void _showSnackBar(BuildContext context, String message) {
-
     final snackBar = SnackBar(
         content: Text(message),
         action: SnackBarAction(
           label: "UNDO",
-          onPressed: (){
+          onPressed: () {
             debugPrint('Performing dummy UNDO operation');
           },
         ));
@@ -149,7 +134,8 @@ class NoteListState extends State<NoteList> {
   }
 
   void navigateToDetail(Note note, String title) async {
-    bool result = await Navigator.push(context, MaterialPageRoute(builder: (context) {
+    bool result =
+        await Navigator.push(context, MaterialPageRoute(builder: (context) {
       return NoteDetail(note, title);
     }));
 
@@ -158,18 +144,113 @@ class NoteListState extends State<NoteList> {
     }
   }
 
-void updateListView() {
-
-  final Future<Database> dbFuture = databaseHelper.initializeDatabase();
-  dbFuture.then((database) {
-
-    Future<List<Note>> noteListFuture = databaseHelper.getNoteList();
-    noteListFuture.then((noteList) {
-      setState(() {
-        this.noteList = noteList;
-        this.count = noteList.length;
+  void updateListView() {
+    final Future<Database> dbFuture = databaseHelper.initializeDatabase();
+    dbFuture.then((database) {
+      Future<List<Note>> noteListFuture = databaseHelper.getNoteList();
+      noteListFuture.then((noteList) {
+        setState(() {
+          this.noteList = noteList;
+          this.count = noteList.length;
+        });
       });
     });
-  });
- }
+  }
+}
+
+class NotesListView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final notesList = Provider.of<ListOfNotesModel>(context);
+    return Scaffold(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => notesList.demoAddNotes(),
+        backgroundColor: Colors.deepPurple,
+        child: Icon(
+          Icons.add,
+          size: 36,
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
+          child: Padding(
+            padding: EdgeInsets.only(left: 20, top: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Notes',
+                  style: Theme.of(context).textTheme.headline3,
+                ),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: BouncingScrollPhysics(),
+                  itemCount: notesList.notes.length,
+                  // padding: EdgeInsets.only(top: 10, bottom: 10),
+                  itemBuilder: (BuildContext context, int index) {
+                    return (notesList.notes.length != 0)
+                        ? InkWell(
+                            splashColor: Colors.red,
+                            onLongPress: () =>
+                                notesList.deleteNote(index: index),
+                            child: Ink(
+                              padding: EdgeInsets.only(top: 10, bottom: 10),
+                              child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  // mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      (index + 1).toString() + '.',
+                                      style: TextStyle(
+                                          fontSize: 56,
+                                          color: Color(0xffdddddd),
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          notesList.notes[index].title,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headline5,
+                                        ),
+                                        Text(
+                                          notesList.notes[index].description,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyText1,
+                                        ),
+                                        Text(
+                                          notesList.notes[index].date
+                                              .toString(),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyText1,
+                                        ),
+                                      ],
+                                    ),
+                                  ]),
+                            ),
+                          )
+                        : Container(
+                            height: 100,
+                            width: 100,
+                            color: Colors.red,
+                          );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

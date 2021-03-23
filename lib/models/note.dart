@@ -82,13 +82,23 @@ class NoteModel {
 }
 
 class ListOfNotesModel extends ChangeNotifier {
-  List<NoteModel> notes;
+  NoteModel noteAssign;
+  List<NoteModel> notes = [];
+  demoAddNotes() {
+    NoteModel demoNotes = NoteModel(
+        date: DateTime.now(),
+        description: 'Description of the notes',
+        highPriority: true,
+        title: 'Some Title');
+    notes.add(demoNotes);
+    notifyListeners();
+  }
+
   addNotes(
       {@required String title,
       @required String description,
       @required bool highPriority,
       @required DateTime date}) {
-    NoteModel noteAssign;
     noteAssign = NoteModel(
         date: date,
         description: description,
@@ -102,7 +112,10 @@ class ListOfNotesModel extends ChangeNotifier {
   }
 
   deleteNote({@required int index}) {
-    notes.remove(index);
+    // notes.remove(index);
+    notes.removeAt(index);
+    print('oject removed at ' + index.toString());
+    print('\n' + notes.length.toString());
     notifyListeners();
   }
 }
