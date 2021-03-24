@@ -83,7 +83,26 @@ class NoteModel {
 
 class ListOfNotesModel extends ChangeNotifier {
   NoteModel noteAssign;
-  List<NoteModel> notes = [];
+  List<NoteModel> notes = [
+    NoteModel(
+        date: DateTime.now(),
+        description:
+            'Description of the notes to this and more useless talks to devert from me and any other thigs ihd he notes to this and more useless he notes to this and more useless ',
+        highPriority: true,
+        title: 'Some Title'),
+    NoteModel(
+        date: DateTime.now(),
+        description:
+            'Description of the notes to tes to this and more useless he notes to this and more useless ',
+        highPriority: true,
+        title: 'Some Title'),
+    NoteModel(
+        date: DateTime.now(),
+        description:
+            'Description of the notes to ihd he notes to this and more useless he notes to this and more useless ',
+        highPriority: true,
+        title: 'Some Title')
+  ];
   demoAddNotes() {
     NoteModel demoNotes = NoteModel(
         date: DateTime.now(),
