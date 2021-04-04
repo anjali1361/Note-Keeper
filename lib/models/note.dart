@@ -1,48 +1,54 @@
+import 'dart:convert';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 
 class NoteModel {
 //id in database will be generated automatically
   final String title;
   final String description;
   final String categories;
-  final DateTime date;
-  final bool highPriority;
-  NoteModel(
-      {@required this.date,
-      @required this.categories,
-      @required this.description,
-      @required this.highPriority,
-      @required this.title});
+  final Timestamp date;
+  NoteModel({
+    @required this.title,
+    @required this.description,
+    @required this.categories,
+    @required this.date,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'description': description,
+      'categories': categories,
+      'date': date.toDate(),
+    };
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory NoteModel.fromJson(String source) =>
+      NoteModel.fromJson(json.decode(source));
 }
 
 class ListOfNotesModel extends ChangeNotifier {
   NoteModel noteAssign;
   List<NoteModel> notes = [];
-  demoAddNotes() {
-    NoteModel demoNotes = NoteModel(
-        date: DateTime.now(),
-        description: 'Description of the notes',
-        highPriority: true,
-        title: 'Some Title');
-    notes.add(demoNotes);
-    notifyListeners();
-  }
 
   addNotes(
       {@required String title,
       @required String description,
-      @required bool highPriority,
-      @required DateTime date}) {
+      @required Timestamp date,
+      @required String category}) {
     noteAssign = NoteModel(
         date: date,
         description: description,
-        highPriority: highPriority,
         title: title,
-        categories: '');
+        categories: category);
     //if priority is high assign it from top
-    (highPriority == true)
-        ? notes.insert(0, noteAssign)
-        : notes.add(noteAssign);
+
+    notes.add(noteAssign);
     notifyListeners();
   }
 

@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:note_keeper/components/themes.dart';
+import 'package:note_keeper/firebaseService/firestoreSeervice.dart';
 import 'package:note_keeper/models/note.dart';
 import 'package:note_keeper/screens/signIn.dart';
 import 'package:provider/provider.dart';
@@ -41,46 +43,40 @@ class MyApp extends StatelessWidget {
 }
 
 class AppThemes extends StatelessWidget {
+  final User user = FirebaseAuth.instance.currentUser;
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider<ListOfNotesModel>(
-            create: (context) => ListOfNotesModel()),
-        Provider<AuthProvider>(
-            create: (context) => AuthProvider(FirebaseAuth.instance)),
-        StreamProvider(
-          create: (context) => context.read<AuthProvider>().authStateChanges,
-          initialData: null,
-        )
-      ],
-      child: MaterialApp(
-        title: "NoteKeeper",
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(primarySwatch: Colors.deepPurple),
-        home: AuthWidget(),
-        // NotesListView(),
-      ),
-    );
+        providers: [
+          ChangeNotifierProvider<FirestoreService>(
+              create: (context) => FirestoreService()),
+          ChangeNotifierProvider<ListOfNotesModel>(
+              create: (context) => ListOfNotesModel()),
+          Provider<AuthProvider>(
+              create: (context) => AuthProvider(FirebaseAuth.instance)),
+          StreamProvider(
+            create: (context) => context.read<AuthProvider>().authStateChanges,
+            initialData: user,
+          )
+        ],
+        child: MaterialApp(
+            title: "NoteKeeper",
+            theme: CustomThemeData.lightTheme(context),
+            darkTheme: CustomThemeData.darkTheme(context),
+            home: Scaffold(
+                backgroundColor: Theme.of(context).backgroundColor,
+                body: AuthWidget())));
   }
 }
 
-class AuthWidget extends StatefulWidget {
-  @override
-  _AuthWidgetState createState() => _AuthWidgetState();
-}
-
-class _AuthWidgetState extends State<AuthWidget> {
+class AuthWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //Instance to know the authentication state.
     final firebaseUser = context.watch<User>();
 
-    if (firebaseUser != null) {
-      {
-        return Home();
-      }
-    }
+    if (firebaseUser != null) return Home();
+
     return SignIn();
   }
 }

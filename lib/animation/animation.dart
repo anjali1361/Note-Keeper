@@ -15,6 +15,12 @@ class _OwlAnimationState extends State<OwlAnimation> {
   Artboard _riveArtboard;
   RiveAnimationController _controller;
   @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
 

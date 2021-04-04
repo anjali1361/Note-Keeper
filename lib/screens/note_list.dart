@@ -1,99 +1,95 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:note_keeper/models/note.dart';
+import 'package:note_keeper/firebaseService/firestoreSeervice.dart';
+import 'package:note_keeper/screens/addNotes.dart';
+import 'package:note_keeper/widgets/cards.dart';
 import 'package:provider/provider.dart';
 
 class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final notesList = Provider.of<ListOfNotesModel>(context);
+    final FirestoreService _firestore = Provider.of<FirestoreService>(context);
+    final User _userData = FirebaseAuth.instance.currentUser;
+    final CollectionReference _notesData = FirebaseFirestore.instance
+        .collection('notes')
+        .doc(_userData.email)
+        .collection(_userData.email);
+
     return Scaffold(
-      backgroundColor: Color(0xffFFFFFF),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showModalBottomSheet(
-              backgroundColor: Colors.transparent,
-              // barrierColor: Colors.transparent,
-              context: context,
-              builder: (context) {
-                return Container(
-                  height: 400,
-                  width: MediaQuery.of(context).size.width,
-                  decoration: BoxDecoration(
-                      color: Colors.deepPurple,
-                      borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(10),
-                          topRight: Radius.circular(10))),
-                );
-              });
-        },
-        backgroundColor: Colors.deepPurple,
-        child: Icon(
-          Icons.add,
-          size: 36,
-        ),
-      ),
+          onPressed: () {
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => AddNotes()));
+          },
+          backgroundColor: Colors.purple,
+          child: Icon(
+            Icons.add,
+            size: 40,
+            color: Theme.of(context).iconTheme.color,
+          )),
+      backgroundColor: Theme.of(context).backgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: BouncingScrollPhysics(),
           child: Padding(
-            padding: EdgeInsets.only(left: 10, top: 10, right: 10),
+            padding: EdgeInsets.only(left: 20, top: 30),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  ' ' + 'Notes',
-                  style: Theme.of(context).textTheme.headline3,
+                  'Notes',
+                  style: Theme.of(context).textTheme.headline1,
                 ),
                 SizedBox(height: 30),
-                StaggeredGridView.countBuilder(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  mainAxisSpacing: 20.0,
-                  crossAxisSpacing: 20.0,
-                  physics: BouncingScrollPhysics(),
-                  itemCount: notesList.notes.length,
-                  staggeredTileBuilder: (int index) => StaggeredTile.fit(1),
-                  itemBuilder: (BuildContext context, int index) {
-                    return (notesList.notes.length != 0)
-                        ? InkWell(
-                            splashColor: Colors.red,
-                            onLongPress: () =>
-                                notesList.deleteNote(index: index),
-                            child: Ink(
-                              decoration: BoxDecoration(
-                                  color: Color(0xffeEeEeE),
-                                  borderRadius: BorderRadius.circular(10)),
-                              padding: EdgeInsets.all(10),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      notesList.notes[index].title,
-                                      style:
-                                          Theme.of(context).textTheme.headline5,
-                                    ),
-                                    Text(
-                                      notesList.notes[index].description,
-                                      style:
-                                          Theme.of(context).textTheme.bodyText1,
-                                    ),
-                                    Text(
-                                      notesList.notes[index].date.toString(),
-                                      style:
-                                          Theme.of(context).textTheme.bodyText1,
-                                    ),
-                                  ]),
-                            ),
-                          )
-                        : Container(
-                            height: 100,
-                            width: 100,
-                            color: Colors.red,
-                          );
-                  },
-                )
+                Text(
+                  'Hello ' + _userData.displayName,
+                  style: Theme.of(context).textTheme.headline4,
+                ),
+                SizedBox(height: 5),
+                Text('here your notes',
+                    style: Theme.of(context).textTheme.bodyText1),
+                SizedBox(height: 30),
+                StreamBuilder(
+                    stream: _notesData.snapshots(),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<QuerySnapshot> snapshot) {
+                      return (snapshot.data != null)
+                          ? (snapshot.data.docs.length != 0)
+                              ? StaggeredGridView.countBuilder(
+                                  crossAxisCount: 2,
+                                  shrinkWrap: true,
+                                  mainAxisSpacing: 20.0,
+                                  crossAxisSpacing: 20.0,
+                                  physics: BouncingScrollPhysics(),
+                                  itemCount: snapshot.data.docs.length,
+                                  staggeredTileBuilder: (int index) =>
+                                      StaggeredTile.fit(1),
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    return NotesCards(
+                                      firestore: _firestore,
+                                      email: _userData.email,
+                                      docId: snapshot.data.docs[index].id,
+                                      index: index,
+                                      title: snapshot.data.docs[index]
+                                          .data()['title'],
+                                      date: snapshot.data.docs[index]
+                                          .data()['date'],
+                                      description: snapshot.data.docs[index]
+                                          .data()['description'],
+                                      category: snapshot.data.docs[index]
+                                          .data()['categories'],
+                                    );
+                                  },
+                                )
+                              : Text('Sorry, no data avaialable',
+                                  style: Theme.of(context).textTheme.headline3)
+                          : Text('Sorry, no data avaialable',
+                              style: Theme.of(context).textTheme.headline3);
+                    })
               ],
             ),
           ),
